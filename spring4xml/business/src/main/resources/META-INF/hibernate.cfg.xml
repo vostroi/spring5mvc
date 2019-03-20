@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+    "-//Hibernate/Hibernate Configuration DTD//EN"
+    "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+  <!--整合hibernate ： 让Spring管理hibernate的SessionFactory;  让Hibernate使用Spring的声明式事务-->
+  <!--DataSource交给Spring配置， 由Ioc容器管理-->
+  <!--映射文件.hbm.xml Spring配置SessionFactory时配置-->
+  <!--在这里配置Hibernate的基本属性：方言  sql输出 格式化 表生成策略 二级缓存等 -->
+  <session-factory>
+
+    <property name="hibernate.dialect">org.hibernate.dialect.MySQL57Dialect</property>
+    <property name="hibernate.show_sql">true</property>
+    <property name="hibernate.format_sql">true</property>
+    <property name="hibernate.hbm2ddl.auto">none</property>
+    <property name="connection.url">jdbc:mysql://localhost:3306/mysql</property>
+    <property name="connection.driver_class">com.mysql.jdbc.Driver</property>
+  </session-factory>
+</hibernate-configuration>

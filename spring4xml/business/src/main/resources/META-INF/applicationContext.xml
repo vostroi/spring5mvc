@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                            http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+                            http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+                            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+
+    <!--包扫描-->
+    <context:component-scan base-package="com.vostroi.java.beans.ssh" />
+
+    <!--使用外部属性文件 来配置数据源-->
+    <context:property-placeholder location="classpath*:META-INF/mysql-db.properties"/>
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="user" value="${user}"/>
+        <property name="password" value="${password}"/>
+        <property name="driverClass" value="${driverClass}"/>
+        <property name="jdbcUrl" value="${jdbcUrl}"/>
+        <property name="initialPoolSize" value="${initPoolSize}"/>
+        <property name="maxPoolSize" value="${maxPoolSize}"/>
+    </bean>
+
+    <!--配置Hibernate SessionFactory; 通过Spring提供的LocalSessionFactoryBean进行配置-->
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+        <!--配置数据源-->
+        <property name="dataSource" ref="dataSource"/>
+        <!--hibernate配置文件-->
+        <property name="configLocations" value="classpath*:META-INF/hibernate.cfg.xml"/>
+        <!--也可以把hibernate.cfg.xml中的配置放在此处，来省略hibernate.cfg.xml文件-->
+
+        <!--配置映射文件 使用通配符-->
+        <property name="mappingLocations" value="classpath*:com/vostroi/java/beans/ssh/*.hbm.xml"/>
+    </bean>
+
+    <!-- 配置事务管理器 -->
+    <bean id="hibernateTransactionManager"
+          class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory"></property>
+    </bean>
+
+    <!-- 启用事务注解 -->
+    <tx:annotation-driven transaction-manager="hibernateTransactionManager"/>
+
+    <!-- 激活Aspectj aop  自动为匹配的类生成代理对象 -->
+    <aop:aspectj-autoproxy/>
+
+</beans>

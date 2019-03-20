@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                            http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+                            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+
+    <bean id="address" class="com.vostroi.java.beans.autowired.Address" p:city="成都" p:street="人民南路"/>
+    <bean id="computor" class="com.vostroi.java.beans.autowired.Computor" p:brand="Dell" p:price="4999"/>
+
+    <!-- 这里是传统的手动装配 -->
+    <bean id="customer1" class="com.vostroi.java.beans.autowired.Customer" p:name="李四" p:age="19"
+        p:address-ref="address" p:computor-ref="computor"/>
+    <!-- 使用autowire指定自动装配方式 byName 和 byType -->
+    <bean id="customer2" class="com.vostroi.java.beans.autowired.Customer" p:name="王二" p:age="21"
+        autowire="byName"  />
+    <bean id="customer3" class="com.vostroi.java.beans.autowired.Customer" p:name="小强" p:age="31"
+        autowire="byType"  />
+    <!-- 使用Bean的parent属性 来继承bean的配置 子bean可以覆盖父bean的配置 可以把父bean配置成一个模板 可以指定abstract="true" 让父类bean不能被实例化，只作为模板让子bean来复用-->
+    <!-- 若一个bean没指定class属性，但此bean必须作为一个模板存在，且要指定abstract="true" abstract不会被继承  这里说的继承都是指配置上的继承 -->
+    <bean id="customer4" parent="customer2" p:name="张三" p:age="28" autowire="byName"/>
+
+    <!-- bean之间的依赖关系  用depends-on来配置当前bean前置依赖的bean，前置依赖的bean会在当前bean之前实例化 -->
+    <!--<bean id="customer5" parent="customer2" p:name="张三" p:age="28" autowire="byName" depends-on="car"/>-->
+
+    <!--bean的作用域scope: spring的默认bean作用域是单例singleton：每次获取的都是同一个bean，Ioc容器初始化时创建， 原型prototype：每次获取的都是不同的bean，每次获取的时候都重新创建-->
+
+    <!--使用外部属性文件 来配置数据源-->
+    <context:property-placeholder location="classpath*:META-INF/mysql-db.properties"/>
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="user" value="${user}"/>
+        <property name="password" value="${password}"/>
+        <property name="driverClass" value="${driverClass}"/>
+        <property name="jdbcUrl" value="${jdbcUrl}"/>
+        <property name="initialPoolSize" value="${initPoolSize}"/>
+        <property name="maxPoolSize" value="${maxPoolSize}"/>
+    </bean>
+    <!--配置JdbcTemplate-->
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+            <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!--配置nameParameterJdbcTemplate-->
+    <bean id="namedParameterJdbcTemplate" class="org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate">
+        <constructor-arg ref="dataSource"/>
+    </bean>
+
+
+    <!-- 配置事务管理器 -->
+    <bean id="transactionManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+
+    <!-- 启用事务注解 -->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+    <!-- bean生命周期 -->
+    <bean id="lifecycle" class="com.vostroi.java.beans.lifecycle.LifeCycle"
+          p:name="张三丰"
+        init-method="init" destroy-method="destroy">
+    </bean>
+    <!-- 配置Bean的后置处理器 -->
+    <bean id="myBeanPostProcessor" class="com.vostroi.java.beans.lifecycle.MyBeanPostProcessor"/>
+
+    <!--通过静态工厂方法来配置Bean  不是配置静态工厂的实例 而是配置Bean实例 只是通过静态工厂方法来获取Bean
+        class:静态工厂的全类名
+        factory-method:获取Bean的静态工厂方法
+        constructor-arg:如果静态工厂方法(factory-bean指定的方法)需要传入参数，使用constructor-arg来指定
+    -->
+    <bean id="myFactoryBean" class="com.vostroi.java.beans.beanfactory.MyStaticBeanFactory"
+          factory-method="getBean">
+        <constructor-arg name="beanName" value="bean2"></constructor-arg>
+    </bean>
+
+    <!--通过实例工厂方法来配置Bean 需要先配置实例工厂的Bean -->
+    <bean id="instanceBeanFactory" class="com.vostroi.java.beans.beanfactory.MyInstanceBeanFactory" />
+
+    <!-- factory-bean:指向实例工厂的Bean factory-bean:获取Bean的工厂方法 如果实例工厂方法(factory-bean指定的方法)需要传入参数， 使用constructor-arg来指定 -->
+    <bean id="myFactoryBean2" class="com.vostroi.java.beans.beanfactory.MyFactoryBean" factory-bean="instanceBeanFactory" factory-method="getBean">
+        <constructor-arg name="beanName" value="bean3"/>
+    </bean>
+
+    <!-- 通过Spring提供的FactoryBean来配置Bean实例 class:指向自定义FacotryBean的全类名 但实际返回的Bean是自定义FacotryBean的getObject方法返回的Bean
+    如果自定义FacoryBean需要参数使用p属性或者property子标签来配置-->
+    <bean id="myFactoryBean3" class="com.vostroi.java.beans.beanfactory.MySpringFactoryBean" p:name="通过Spring提供的FactoryBean来获取Bean" />
+
+
+    <context:component-scan base-package="com.vostroi.java.dao, com.vostroi.java.service" >
+    </context:component-scan>
+
+    <bean id="account" class="com.vostroi.java.beans.Account"></bean>
+</beans>
