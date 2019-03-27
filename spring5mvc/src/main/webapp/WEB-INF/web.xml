@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app version="3.0"
+                xmlns="http://java.sun.com/xml/ns/javaee"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+  <display-name>spring5mvc</display-name>
+
+  <!--也可以在DispatcherServlet中配置-->
+  <!--<context-param>-->
+    <!--<param-name>contextConfigLocation</param-name>-->
+    <!--<param-value>/WEB-INF/springmvc.xml</param-value>-->
+  <!--</context-param>-->
+
+  <!--配置 Spring Ioc容器 ContextLoaderListener-->
+  <!--1.通常在整合hibernate，配置数据源，事务，都是在spring的配置文件中配置，由spring ioc管理（而不是配置在springmvc.xml中），spring ioc容器还要管理service dao 等组件-->
+  <!--2.实际上也可以不配置ContextLoaderListener；以上的配置都可以放在springmvc.xml中， 也可以放在多个 spring 配置文件 在配置contextConfigLocation时候用通配符来加载这些配置文件-->
+  <!--建议还是配置spring ioc容器  ContextLoaderListener ， 让springmvc.xml去配置springmvc自己的配置比如controller；
+    数据源，事务 整合框架的配置交由spring配置; 注意不要让组件同时被spring Ioc和springmvc Ioc同时扫描到 <context:component-scan />重复扫描，组件会初始化多次
+    解决方法：让spring ioc和springmvc ioc各自扫描自己要管理的组件 exclude-filter 和 include-filter 根据注解过滤来决定各自扫描的组件 注意要配置禁用默认的filter : use-default-filter设置为false-->
+  <listener>
+    <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+  </listener>
+
+  <!--配置DispatcherServlet-->
+  <servlet>
+    <servlet-name>dispatcherServlet</servlet-name>
+    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+
+    <!--配置DispatcherServlet的初始化参数 配置SpringMvc的配置文件的 位置 和 名称-->
+    <!--可以不手动配置springmvc.xml 使用默认的配置为：/WEB-INF/<servlet-name>-servlet.xml  -->
+    <init-param>
+      <param-name>contextConfigLocation</param-name>
+      <param-value>/WEB-INF/springmvc.xml</param-value>
+    </init-param>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <!--配置DispatcherServlet的映射-->
+  <!--拦截了所有请求，包括了静态资源（.js/.css/...）-->
+  <!--解决方法：1.配置拦截.do/.action/...这种是旧的请求controller的方式 不符合rest风格的请求-->
+  <!--在springmvc的配置文件中配置 mvc:default-servlet-->
+  <servlet-mapping>
+    <servlet-name>dispatcherServlet</servlet-name>
+    <url-pattern>/</url-pattern>
+  </servlet-mapping>
+
+
+  <!--配置HiddenHttpMethodFilter 可以把POST请求转为DELETE和PUT请求-->
+  <filter>
+    <filter-name>hiddenHttpMethodFilter</filter-name>
+    <filter-class>org.springframework.web.filter.HiddenHttpMethodFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>hiddenHttpMethodFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+  
+  <filter>
+    <filter-name>characterEncoding</filter-name>
+    <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+    <init-param>
+      <param-name>encoding</param-name>
+      <param-value>utf-8</param-value>
+    </init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>characterEncoding</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+</web-app>

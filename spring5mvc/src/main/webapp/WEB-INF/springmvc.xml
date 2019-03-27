@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <!--配置包扫描-->
+    <context:component-scan base-package="com.java.vostroi.component"/>
+
+    <!--配置视图解析器  controller方法返回为物理视图 默认顺序为max_interger -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/views/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>
+
+    <!--配置BeanNameViewResolver视图解析器 它使用视图的名称来解析视图 并指定此视力解析器的顺序 使用频繁的解析器顺序靠后-->
+    <bean class="org.springframework.web.servlet.view.BeanNameViewResolver">
+        <property name="order" value="100" />
+    </bean>
+
+    <!--配置国际化资源文件-->
+    <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+        <property name="basename" value="i18n"/><!--指定资源文件名-->
+    </bean>
+
+    <!--mvc:view-controller 配置可直接跳转页面，无需再经过controller 但会影响到其它controller正常工作 需要mvc:annotation-driven配合使用-->
+    <mvc:view-controller path="success" view-name="success" />
+    <mvc:view-controller path="addPerson" view-name="editPerson" />
+
+    <!--会默认装配LocalValidatorFactoryBean 通过在方法的入参上加@Valid springmvc根据声明的规则进行校验
+    需要加入第三方验证框架；在对应的Bean的属性上加上验证注解；
+    -->
+    <mvc:annotation-driven conversion-service="conversionService"/>
+
+    <!--配置处理静态资源 需要配置 mvc:annotation-driven配合使用-->
+    <!--作用：会在springmvc上下文中定义一个DefaultServletHttpRequestHander，它会对进入DispatherServlet的请求进行筛选；
+    springmvc会判断请求，是否被springmvc映射过，映射过，交给它会对进入DispatherServlet处理；没映射过就会去请求资源（页面/js/css）-->
+    <mvc:default-servlet-handler />
+
+    <!--配置自定义类型转换器 还需要在mvc:annotation-driven中配置conversionService-->
+    <bean id="conversionService" class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+        <property name="converters">
+            <set>
+                <ref bean="personConverter" />
+            </set>
+        </property>
+    </bean>
+
+    <!--配置文件上传-->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="maxUploadSizePerFile" value="102400000"/>
+        <property name="defaultEncoding" value="utf-8"/>
+        <property name="maxInMemorySize" value="10240000"/>
+    </bean>
+
+    <!--配置拦截器-->
+    <mvc:interceptors>
+        <!--配置自定义拦截器-->
+        <bean class="com.java.vostroi.component.interceptors.Myinterceptor"/>
+        <!--配置LocalchangeInterceptor 手动切换国际化资源文件-->
+        <bean class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor"/>
+
+        <!--配置拦截器 精确配置-->
+        <mvc:interceptor>
+            <mvc:mapping path="/init"/><!--只拦截哪些路径-->
+            <!--<mvc:exclude-mapping path="/restCrud"/>&lt;!&ndash;不拦截哪些路径&ndash;&gt;-->
+            <bean class="com.java.vostroi.component.interceptors.Myinterceptor2"/>
+        </mvc:interceptor>
+    </mvc:interceptors>
+</beans>
