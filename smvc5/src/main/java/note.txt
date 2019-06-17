@@ -1,0 +1,7 @@
+1.web容器(要求支持servlet3.0+)启动的时候，会查找每个jar包中META-INF/services/javax.servlet.ServletContainerInitializer[文件内容是org.springframework.web.SpringServletContainerInitializer]
+2.加载这个文件指定的SpringServletContainerInitializer实现来创建根容器、子容器
+3.注解方式配置的DispatcherServlet初始化容器AbstractAnnotationConfigDispatcherServletInitializer会创建
+    根容器：getRootConfigClasses()由我们实现
+    子容器：getServletConfigClasses()由我们实现
+4.启动springmvc高级定制功能 @EnableWebMvc，实现WebMvcConfigurer接口,配置组件
+    [spring5取消了WebMvcConfigurerAdapter，因为java8允许接口有default方法，WebMvcConfigurerAdapter就没有存在的必要，只需实现WebMvcConfigurer接口，按需重写方法]
